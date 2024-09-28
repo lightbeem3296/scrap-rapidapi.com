@@ -18,17 +18,18 @@ def search_by_query(page, query: str) -> None:
     res_str = page.query_selector_all("span.text-xl.font-semibold")[1].inner_text()
     res_count = int(re.search(r"\((\d+)\)", res_str).group(1))
     logger.info(f"{query}: {res_count}")
-    if res_count <= 1000 and res_count > 0:
-        with OUTPUT_FILE_PATH.open("a") as file:
-            file.write(
-                json.dumps(
-                    {
-                        "query": query,
-                        "count": res_count,
-                    }
+    if res_count <= 1000:
+        if res_count > 0:
+            with OUTPUT_FILE_PATH.open("a") as file:
+                file.write(
+                    json.dumps(
+                        {
+                            "query": query,
+                            "count": res_count,
+                        }
+                    )
+                    + "\n"
                 )
-                + "\n"
-            )
     else:
         for ch in "abcdefghijklmnopqrstuvwxyz":
             search_by_query(page=page, query=query + ch)
