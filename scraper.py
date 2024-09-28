@@ -96,8 +96,6 @@ def get_pricing_rate_limit(card) -> tuple[str, str]:
 def scrap_one(page, updated: str, api_link: str) -> bool:
     ret = False
     try:
-        logger.info(f"link >> {api_link}")
-
         output_file_name = calc_md5(api_link) + ".json"
         output_file_path = OUTPUT_DIR / output_file_name
         logger.info(f"file_name >> {output_file_name}")
@@ -222,7 +220,7 @@ def scrap_one(page, updated: str, api_link: str) -> bool:
 
 
 def work(start: int, count: int) -> None:  # noqa: PLR0915
-    ctypes.windll.kernel32.SetConsoleTitleW(f"[RapidAPI] start: {start}, count: {count}")
+    ctypes.windll.kernel32.SetConsoleTitleW(f"start: {start}, count: {count}")
 
     with sync_playwright() as pw_ctx_man:
         browser = pw_ctx_man.chromium.launch(headless=False, timeout=60000)
@@ -242,12 +240,16 @@ def work(start: int, count: int) -> None:  # noqa: PLR0915
                 api_link = DOMAIN + index["link"]
                 api_link = "/".join(api_link.split("/")[:-1])
 
+                logger.info(f"{line_number} link >> {api_link}")
+
                 while not scrap_one(
                     page=page,
                     updated=index["updated"],
                     api_link=api_link,
                 ):
                     pass
+            
+                line_number += 1
 
         context.close()
         browser.close()
