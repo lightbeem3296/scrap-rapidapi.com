@@ -1,3 +1,4 @@
+import ctypes
 import argparse
 import hashlib
 import json
@@ -8,6 +9,7 @@ from loguru import logger
 from playwright.sync_api import sync_playwright
 
 CUR_PATH = Path(__file__).parent
+INDEX_PATH = CUR_PATH / "index.jsonl"
 INDEXING_LINK = "https://rapidapi.com/search?sortBy%3DByRelevance"
 OUTPUT_DIR = CUR_PATH / "output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -219,14 +221,23 @@ def scrap_one(page, updated: str, api_link: str) -> bool:
     return ret
 
 
-def work(list_file_path: str) -> None:  # noqa: PLR0915
+def work(start: int, count: int) -> None:  # noqa: PLR0915
+    ctypes.windll.kernel32.SetConsoleTitleW(f"[RapidAPI] start: {start}, count: {count}")
+
     with sync_playwright() as pw_ctx_man:
         browser = pw_ctx_man.chromium.launch(headless=False, timeout=60000)
         context = browser.new_context()
         page = context.new_page()
 
-        with open(list_file_path) as list_file:  # noqa: PTH123
+        with INDEX_PATH.open("r") as list_file:
+            line_number = 0
             for line in list_file:
+                if line_number < start:
+                    line_number += 1
+                    continue
+                elif count != 0 and line_number >= start + count:
+                    break
+
                 index = json.loads(line)
                 api_link = DOMAIN + index["link"]
                 api_link = "/".join(api_link.split("/")[:-1])
@@ -246,14 +257,23 @@ def main() -> None:
     try:
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "-f",
-            dest="file",
+            "--start",
+            dest="start",
+            type=int,
+            default=0,
             required=False,
-            default="test_list.jsonl",
-            help="API link list file path.",
+            help="Start page index. Default is 0.",
+        )
+        parser.add_argument(
+            "--count",
+            dest="count",
+            type=int,
+            default=0,
+            required=False,
+            help="Page count. Default is 0 which means all the following pages.",
         )
         args = parser.parse_args()
-        work(args.file)
+        work(args.start, args.count)
     except Exception as ex:  # noqa: BLE001
         logger.exception(ex)
 
