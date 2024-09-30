@@ -224,7 +224,7 @@ def work(page, index_file_path: str) -> None:  # noqa: PLR0915
         line_number = 0
         for line in index_file:
             api_info = json.loads(line)
-            logger.info(f"{line_number} > {api_info['category']} > {api_info["id"]}")
+            logger.info(f'{line_number} > {api_info["category"]} > {api_info["id"]}')
             scrap_one(page=page, api_info=api_info)
             line_number += 1
 
