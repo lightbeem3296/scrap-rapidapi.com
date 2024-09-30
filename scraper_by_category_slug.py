@@ -92,7 +92,6 @@ def scrap_one(page, api_info: dict) -> bool:
     try:
         output_file_name = api_info["id"] + ".json"
         output_file_path = OUTPUT_DIR / output_file_name
-        logger.info(f"{api_info['category']} > {output_file_name}")
 
         already_done = False
         if output_file_path.exists():
@@ -215,9 +214,12 @@ def work(page, index_file_path: str) -> None:  # noqa: PLR0915
     index_file_name = os.path.basename(index_file_path)
     logger.info(f"index_file_name: {index_file_name}")
     with open(index_file_path, "r") as index_file:
+        line_number = 0
         for line in index_file:
             api_info = json.loads(line)
+            logger.info(f"{line_number} > {api_info['category']} > {api_info["id"]}")
             scrap_one(page=page, api_info=api_info)
+            line_number += 1
 
 
 def main() -> None:
