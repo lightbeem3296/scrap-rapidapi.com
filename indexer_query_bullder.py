@@ -1,6 +1,5 @@
 import json
 import re
-import time
 from pathlib import Path
 
 from loguru import logger
@@ -11,11 +10,12 @@ OUTPUT_FILE_PATH = CUR_PATH / "index_query_list.jsonl"
 
 
 def search_by_query(page, query: str) -> None:
-    page.fill("input.relative", f'"{query}"')
+    page.fill("input.relative", f"{query}")
     page.query_selector("div.flex.h-5.w-auto.cursor-default").click()
-    time.sleep(1)
-    page.wait_for_selector("span.text-xl.font-semibold", state="visible")
-    res_str = page.query_selector_all("span.text-xl.font-semibold")[1].inner_text()
+    page.wait_for_selector("section.rounded-lg", state="visible")
+    body = page.query_selector("section.rounded-lg")
+    body.wait_for_selector("span.text-xl", state="visible")
+    res_str = body.query_selector("span.text-xl").inner_text()
     res_count = int(re.search(r"\((\d+)\)", res_str).group(1))
     logger.info(f"{query}: {res_count}")
     if res_count <= 1000:
