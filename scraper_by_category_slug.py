@@ -12,11 +12,18 @@ OUTPUT_DIR = CUR_PATH / "output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def navigate(page, link: str) -> None:
+def navigate(page, link: str) -> bool:
+    ret = True
+
     try:  # noqa: SIM105
         page.goto(link, wait_until="networkidle", timeout=10000)
     except:  # noqa: E722, S110
         pass
+
+    if page.url.startswith("https://rapidapi.com/server-error"):
+        ret = False
+
+    return ret
 
 
 def wait_for_selector(page, selector: str) -> None:
@@ -103,12 +110,10 @@ def scrap_one(page, api_info: dict) -> bool:
                 except:  # noqa: E722, S110
                     output_file_path.unlink()
 
+        api_link = f'https://rapidapi.com/{api_info["user"]["slugifiedName"]}/api/{api_info["slugifiedName"]}'
         if already_done:
             logger.info("already done")
-        else:
-            api_link = f'https://rapidapi.com/{api_info["user"]["slugifiedName"]}/api/{api_info["slugifiedName"]}'
-            navigate(page, api_link)
-
+        elif navigate(page, api_link):
             store_info = {}
 
             # id
@@ -203,6 +208,8 @@ def scrap_one(page, api_info: dict) -> bool:
 
             with open(output_file_path, "w") as output_file:  # noqa: PTH123
                 json.dump(store_info, output_file, indent=2, default=str)
+        else:
+            logger.error("server error")
 
         ret = True
     except Exception as ex:  # noqa: BLE001
