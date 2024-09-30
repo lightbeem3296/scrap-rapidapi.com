@@ -19,6 +19,7 @@ def merge(src_dpath: str):
 
         res_df = pd.DataFrame(
             {
+                "id": [],
                 "name": [],
                 "link": [],
                 "popularity": [],
@@ -34,6 +35,7 @@ def merge(src_dpath: str):
                 "updated": [],
                 "reviewers": [],
                 "creator_name": [],
+                "creator_link": [],
                 "pricing_basic": [],
                 "pricing_basic_requests": [],
                 "pricing_basic_features": [],
@@ -76,8 +78,6 @@ def main():
     try:
         if len(sys.argv) > 1:
             src_dlist = sys.argv[1:]
-            for src_dir in src_dlist:
-                print(f"[*] src_dir: {src_dir}")
             for src_dir in src_dlist:
                 merge(src_dir)
     except Exception as ex:
