@@ -20,7 +20,7 @@ def navigate(page, link: str) -> None:
 
 
 def wait_for_selector(page, selector: str) -> None:
-    page.wait_for_selector(selector, timeout=30000)
+    page.wait_for_selector(selector, timeout=10000, state="attached")
 
 
 def get_pricing_price(card) -> tuple[str, str]:
@@ -92,7 +92,7 @@ def scrap_one(page, api_info: dict) -> bool:
     try:
         output_file_name = api_info["id"] + ".json"
         output_file_path = OUTPUT_DIR / output_file_name
-        logger.info(f"file_name >> {output_file_name}")
+        logger.info(f"{api_info['category']} > {output_file_name}")
 
         already_done = False
         if output_file_path.exists():
@@ -107,10 +107,13 @@ def scrap_one(page, api_info: dict) -> bool:
         if already_done:
             logger.info("already done")
         else:
-            api_link = f"https://rapidapi.com/{api_info["user"]["slugifiedName"]}/api/{api_info["slugifiedName"]}"
+            api_link = f'https://rapidapi.com/{api_info["user"]["slugifiedName"]}/api/{api_info["slugifiedName"]}'
             navigate(page, api_link)
 
             store_info = {}
+
+            # id
+            store_info["id"] = api_info["id"]
 
             # name
             store_info["name"] = api_info["name"]
@@ -127,11 +130,6 @@ def scrap_one(page, api_info: dict) -> bool:
                 store_info["latency"] = api_info["score"]["avgLatency"]
                 # test
                 store_info["test"] = api_info["score"]["avgSuccessRate"]
-            else:
-                store_info["popularity"] = 0
-                store_info["service_level"] = 0
-                store_info["latency"] = 0
-                store_info["test"] = 0
 
             # description
             store_info["description"] = api_info["description"]
@@ -141,7 +139,7 @@ def scrap_one(page, api_info: dict) -> bool:
             # creator-name
             store_info["creator_name"] = api_info["user"]["name"]
             store_info["creator_link"] = (
-                f"https://rapidapi.com/user/{api_info["user"]["slugifiedName"]}"
+                f'https://rapidapi.com/user/{api_info["user"]["slugifiedName"]}'
             )
             # subscribers
             store_info["subscribers"] = (
@@ -161,15 +159,15 @@ def scrap_one(page, api_info: dict) -> bool:
                     store_info["website"] = website_elem.get_attribute("href")
 
             # version
-            wait_for_selector(page, "div.rapid-select__single-value")
-            store_info["version"] = (
-                page.query_selector("div.rapid-select__single-value")
-                .inner_text()
-                .replace("(", "")
-                .replace(")", "")
-                .replace("current", "")
-                .strip()
-            )
+            elem = page.query_selector("div.rapid-select__single-value")
+            if elem:
+                store_info["version"] = (
+                    elem.inner_text()
+                    .replace("(", "")
+                    .replace(")", "")
+                    .replace("current", "")
+                    .strip()
+                )
 
             # created
             store_info["created"] = ""
@@ -187,7 +185,7 @@ def scrap_one(page, api_info: dict) -> bool:
                 .strip()
             )
 
-            pricing_link = store_info + "/pricing"
+            pricing_link = api_link + "/pricing"
             navigate(page, pricing_link)
             wait_for_selector(page, "div.flex.min-w-\\[256px\\]")
             cards = page.query_selector_all("div.flex.min-w-\\[256px\\]")
@@ -213,31 +211,13 @@ def scrap_one(page, api_info: dict) -> bool:
     return ret
 
 
-def work(index_file_path: str) -> None:  # noqa: PLR0915
+def work(page, index_file_path: str) -> None:  # noqa: PLR0915
     index_file_name = os.path.basename(index_file_path)
     logger.info(f"index_file_name: {index_file_name}")
-    with sync_playwright() as pw_ctx_man:
-        browser = pw_ctx_man.chromium.launch(headless=False, timeout=60000)
-        context = browser.new_context()
-        page = context.new_page()
-
-        page.goto("https://rapidapi.com/search?sortBy%3DByRelevance")
-
-        with open(index_file_path, "r") as index_file:
-            line_number = 0
-            for line in index_file:
-                api_info = json.loads(line)
-
-                while not scrap_one(
-                    page=page,
-                    api_info=api_info,
-                ):
-                    pass
-
-                line_number += 1
-
-        context.close()
-        browser.close()
+    with open(index_file_path, "r") as index_file:
+        for line in index_file:
+            api_info = json.loads(line)
+            scrap_one(page=page, api_info=api_info)
 
 
 def main() -> None:
@@ -246,8 +226,21 @@ def main() -> None:
             index_file_list = sys.argv[1:]
             for index_file_path in index_file_list:
                 logger.info(f"index_file_path: {index_file_path}")
-            for index_file_path in index_file_list:
-                work(index_file_path)
+
+            with sync_playwright() as pw_ctx_man:
+                browser = pw_ctx_man.chromium.launch(headless=False)
+                context = browser.new_context()
+                page = context.new_page()
+
+                page.goto(
+                    "https://rapidapi.com/search?sortBy%3DByRelevance", timeout=60000
+                )
+                for index_file_path in index_file_list:
+                    work(page, index_file_path)
+
+                context.close()
+                browser.close()
+
     except Exception as ex:  # noqa: BLE001
         logger.exception(ex)
 
