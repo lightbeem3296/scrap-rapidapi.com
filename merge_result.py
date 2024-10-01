@@ -56,11 +56,12 @@ def merge(src_dpath: str):
         )
 
         print(f"[*] merge: {src_dpath} > {dst_fpath}.*")
+        file_number = 0
         for dpath, _, fnames in os.walk(src_dpath):
             for fname in fnames:
                 if fname.lower().endswith(".json"):
                     fpath = os.path.join(dpath, fname)
-                    print(f"[*] filepath: {fpath[len(src_dpath):]}")
+                    print(f"[*] {file_number} > {fpath[len(src_dpath):]}")
 
                     with open(fpath, mode="r") as f:
                         info: dict[str, str] = json.load(f)
@@ -68,6 +69,7 @@ def merge(src_dpath: str):
                             [res_df, pd.DataFrame([info])],
                             ignore_index=True,
                         )
+                    file_number += 1
         res_df.to_csv(dst_fpath + ".csv", index=False)
 
     except Exception as ex:
