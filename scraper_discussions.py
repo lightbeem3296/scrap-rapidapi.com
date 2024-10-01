@@ -12,11 +12,12 @@ from loguru import logger
 CUR_PATH = Path(__file__).parent
 INDEX_DIR = CUR_PATH / "index_category_slug"
 OUTPUT_DIR = CUR_PATH / "output"
+MAX_RETRIES = 10
 
 
 def fetch_graphql(api_id: str, offset: int, limit: int) -> tuple[list, int]:
     ret = [], 0
-    while True:
+    for _ in range(MAX_RETRIES):
         try:
             resp = requests.post(
                 url="https://rapidapi.com/gateway/graphql",
