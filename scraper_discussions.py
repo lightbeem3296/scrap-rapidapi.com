@@ -1,3 +1,5 @@
+import argparse
+import ctypes
 import json
 import os
 import time
@@ -102,7 +104,29 @@ def work(api_info) -> None:
 
 def main():
     try:
+        parser = argparse.ArgumentParser(
+            description="Process JSONL files from INDEX_DIR."
+        )
+        parser.add_argument(
+            "--start",
+            type=int,
+            default=0,
+            help="Start processing from this index.",
+        )
+        parser.add_argument(
+            "--count",
+            type=int,
+            default=0,
+            help="Number of items to process (0 for no limit).",
+        )
+
+        args = parser.parse_args()
+        start, count = args.start, args.count
+
+        ctypes.windll.kernel32.SetConsoleTitleW(f"start: {start}, count: {count}")
+
         cursor = 0
+        processed = 0
         for dpath, _, fnames in os.walk(INDEX_DIR):
             for fname in fnames:
                 if os.path.splitext(fname)[1] != ".jsonl":
@@ -112,12 +136,20 @@ def main():
                 fpath = os.path.join(dpath, fname)
                 with open(fpath, "r") as index_file:
                     for line in index_file:
+                        if cursor < start:
+                            cursor += 1
+                            continue  # Skip until we reach the start point
+
                         api_info = json.loads(line)
                         logger.info(
                             f"{cursor} > {api_info['category']} > {api_info['id']}"
                         )
                         work(api_info)
                         cursor += 1
+                        processed += 1
+
+                        if count > 0 and processed >= count:
+                            return
 
     except Exception as ex:
         logger.exception(ex)
