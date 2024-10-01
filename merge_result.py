@@ -52,6 +52,9 @@ def merge(src_dpath: str):
                 "pricing_mega_requests": [],
                 "pricing_mega_features": [],
                 "pricing_mega_rate_limit": [],
+                "discussions": [],
+                "discussions_answered": [],
+                "discussions_avg_msgs": [],
             }
         )
 
@@ -59,16 +62,43 @@ def merge(src_dpath: str):
         file_number = 0
         for dpath, _, fnames in os.walk(src_dpath):
             for fname in fnames:
+                if fname.lower().endswith("_discuss.json"):
+                    continue
+
                 if fname.lower().endswith(".json"):
                     fpath = os.path.join(dpath, fname)
                     print(f"[*] {file_number} > {fpath[len(src_dpath):]}")
 
+                    discuss_fpath = os.path.join(
+                        dpath,
+                        fname.replace(".json", "_discuss.json"),
+                    )
                     with open(fpath, mode="r") as f:
                         info: dict[str, str] = json.load(f)
-                        res_df = pd.concat(
-                            [res_df, pd.DataFrame([info])],
-                            ignore_index=True,
-                        )
+                        with open(discuss_fpath, mode="r") as discuss_file:
+                            discuss: dict = json.load(discuss_file)
+
+                            info["discussions"] = int(discuss["total"])
+                            info["discussions_answered"] = int(0)
+                            total_msgs = 0
+                            for item in discuss["list"]:
+                                if item["isAnswered"]:
+                                    info["discussions_answered"] += 1
+                                total_msgs += (
+                                    item["commentsCount"]
+                                    if item["commentsCount"] is not None
+                                    else 0
+                                )
+                            info["discussions_avg_msgs"] = (
+                                (total_msgs / discuss["total"])
+                                if discuss["total"] != 0
+                                else 0
+                            )
+
+                            res_df = pd.concat(
+                                [res_df, pd.DataFrame([info])],
+                                ignore_index=True,
+                            )
                     file_number += 1
         res_df.to_csv(dst_fpath + ".csv", index=False)
 
