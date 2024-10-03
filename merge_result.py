@@ -36,19 +36,23 @@ def merge(src_dpath: str):
                 "reviewers": [],
                 "creator_name": [],
                 "creator_link": [],
-                "pricing_basic": [],
+                "pricing_basic_price": [],
+                "pricing_basic_period": [],
                 "pricing_basic_requests": [],
                 "pricing_basic_features": [],
                 "pricing_basic_rate_limit": [],
-                "pricing_pro": [],
+                "pricing_pro_price": [],
+                "pricing_pro_period": [],
                 "pricing_pro_requests": [],
                 "pricing_pro_features": [],
                 "pricing_pro_rate_limit": [],
-                "pricing_ultra": [],
+                "pricing_ultra_price": [],
+                "pricing_ultra_period": [],
                 "pricing_ultra_requests": [],
                 "pricing_ultra_features": [],
                 "pricing_ultra_rate_limit": [],
-                "pricing_mega": [],
+                "pricing_mega_price": [],
+                "pricing_mega_period": [],
                 "pricing_mega_requests": [],
                 "pricing_mega_features": [],
                 "pricing_mega_rate_limit": [],
@@ -75,6 +79,14 @@ def merge(src_dpath: str):
                     )
                     with open(fpath, mode="r") as f:
                         info: dict[str, str] = json.load(f)
+
+                        for tag in ["basic", "pro", "ultra", "mega"]:
+                            key = f"pricing_{tag}"
+                            if key in info:
+                                price = info[key]
+                                info[f"{key}_price"] = price.split("/")[0]
+                                info[f"{key}_period"] = price.split("/")[1]
+
                         with open(discuss_fpath, mode="r") as discuss_file:
                             discuss: dict = json.load(discuss_file)
 
