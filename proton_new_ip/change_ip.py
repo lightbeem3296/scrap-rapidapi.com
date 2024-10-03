@@ -42,6 +42,7 @@ def main():
 
         while True:
             try:
+                logger.info("Checking ...")
                 page.goto(
                     "https://rapidapi.com/search?sortBy%3DByRelevance",
                     timeout=60000,
@@ -50,9 +51,11 @@ def main():
                 # check if ip is blocked
                 elem = page.query_selector("span[data-translate=error]")
                 if elem is not None and elem.inner_text() == "Error":
-                    logger.info("IP is blocked. Reconnecting VPN ...")
+                    logger.warning("IP is blocked. Reconnecting VPN ...")
                     # change ip address
                     find_and_click_image(image_path=IMAGE_PATH)
+                else:
+                    logger.info("Not blocked")
             except Exception as e:
                 logger.exception(e)
 
