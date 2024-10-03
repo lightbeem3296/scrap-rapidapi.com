@@ -48,7 +48,8 @@ def main():
                 )
 
                 # check if ip is blocked
-                if page.query_selector("") is not None:
+                elem = page.query_selector("span[data-translate=error]")
+                if elem is not None and elem.inner_text() == "Error":
                     logger.info("IP is blocked. Reconnecting VPN ...")
                     # change ip address
                     find_and_click_image(image_path=IMAGE_PATH)
