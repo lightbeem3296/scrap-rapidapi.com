@@ -14,13 +14,14 @@ IMAGE_PATH = CUR_DIR / "btn_fastest.png"
 def find_and_click_image(image_path):
     try:
         # Locate the image on the screen
-        image_box = pyautogui.locateOnScreen(image_path, confidence=0.8)
+        image_box = pyautogui.locateOnScreen(str(image_path), confidence=0.99)
 
         if image_box:
             # Move the cursor to the image's right center
-            pox_x = image_box.left + image_box.width - 20
-            pos_y = image_box.top - image_box.height // 2
-            pyautogui.moveTo(x=pox_x, y=pos_y, duration=0.5)
+            pos_x = image_box.left + image_box.width - 20
+            pos_y = image_box.top + image_box.height // 2
+            logger.info(f"x: {pos_x}, y: {pos_y}")
+            pyautogui.moveTo(x=pos_x, y=pos_y, duration=0.5)
 
             # Click on the image
             pyautogui.click()
