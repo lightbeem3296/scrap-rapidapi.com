@@ -8,24 +8,26 @@ from playwright.sync_api import sync_playwright
 CUR_DIR = Path(__file__).parent
 
 # Load the image
-IMAGE_PATH = CUR_DIR / "btn_change_server.png"
+IMAGE_PATH = CUR_DIR / "btn_fastest.png"
 
 
 def find_and_click_image(image_path):
     try:
         # Locate the image on the screen
-        image_loc = pyautogui.locateCenterOnScreen(str(image_path), confidence=0.99)
+        image_box = pyautogui.locateOnScreen(str(image_path), confidence=0.99)
 
-        if image_loc is not None:
+        if image_box:
             # Move the cursor to the image's right center
-            logger.info(f"location: {image_loc}")
-            pyautogui.moveTo(image_loc)
+            pos_x = image_box.left + image_box.width - 20
+            pos_y = image_box.top + image_box.height // 2
+            logger.info(f"x: {pos_x}, y: {pos_y}")
+            pyautogui.moveTo(x=pos_x, y=pos_y, duration=0.5)
 
             # Click on the image
             pyautogui.click()
-            print(f"Clicked on the image at {image_loc}")
+            print(f"Clicked on the image at {image_box}")
 
-            pyautogui.moveTo(x=image_loc.x, y=image_loc.y-100, duration=0.5)
+            pyautogui.moveTo(x=pos_x, y=pos_y-100, duration=0.5)
         else:
             print("Image not found on the screen")
 
