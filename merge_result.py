@@ -34,6 +34,7 @@ def merge(src_dpath: str):
                 "created": [],
                 "updated": [],
                 "reviewers": [],
+                "score": [],
                 "creator_name": [],
                 "creator_link": [],
                 "pricing_basic_price": [],
@@ -66,27 +67,42 @@ def merge(src_dpath: str):
         file_number = 0
         for dpath, _, fnames in os.walk(src_dpath):
             for fname in fnames:
+                if not fname.lower().endswith(".json"):
+                    continue
+
                 if fname.lower().endswith("_discuss.json"):
                     continue
 
-                if fname.lower().endswith(".json"):
-                    fpath = os.path.join(dpath, fname)
-                    print(f"[*] {file_number} > {fpath[len(src_dpath):]}")
+                if fname.lower().endswith("_score.json"):
+                    continue
 
-                    discuss_fpath = os.path.join(
-                        dpath,
-                        fname.replace(".json", "_discuss.json"),
-                    )
-                    with open(fpath, mode="r") as f:
-                        info: dict[str, str] = json.load(f)
+                fpath = os.path.join(dpath, fname)
+                print(f"[*] {file_number} > {fpath[len(src_dpath):]}")
 
-                        for tag in ["basic", "pro", "ultra", "mega"]:
-                            key = f"pricing_{tag}"
-                            if key in info:
-                                price = info[key]
-                                info[f"{key}_price"] = price.split("/")[0]
-                                info[f"{key}_period"] = price.split("/")[1]
+                discuss_fpath = os.path.join(
+                    dpath,
+                    fname.replace(".json", "_discuss.json"),
+                )
 
+                score_fpath = os.path.join(
+                    dpath,
+                    fname.replace(".json", "_discuss.json"),
+                )
+
+                with open(fpath, mode="r") as f:
+                    info: dict[str, str] = json.load(f)
+
+                    for tag in ["basic", "pro", "ultra", "mega"]:
+                        key = f"pricing_{tag}"
+                        if key in info:
+                            price = info[key]
+                            info[f"{key}_price"] = price.split("/")[0]
+                            info[f"{key}_period"] = price.split("/")[1]
+
+                    info["discussions"] = 0
+                    info["discussions_answered"] = 0
+                    info["discussions_avg_msgs"] = 0
+                    if os.path.isfile(discuss_fpath):
                         with open(discuss_fpath, mode="r") as discuss_file:
                             discuss: dict = json.load(discuss_file)
 
@@ -107,11 +123,17 @@ def merge(src_dpath: str):
                                 else 0
                             )
 
-                            res_df = pd.concat(
-                                [res_df, pd.DataFrame([info])],
-                                ignore_index=True,
-                            )
-                    file_number += 1
+                    info["score"] = 0
+                    if os.path.isfile(score_fpath):
+                        with open(score_fpath, mode="r") as score_file:
+                            score: dict = json.load(score_file)
+                            info["score"] = int(score["score"].replace("Not rated", "0"))
+
+                    res_df = pd.concat(
+                        [res_df, pd.DataFrame([info])],
+                        ignore_index=True,
+                    )
+                file_number += 1
         res_df.to_csv(dst_fpath + ".csv", index=False)
 
     except Exception as ex:
