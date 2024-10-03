@@ -20,7 +20,7 @@ def navigate(page, link: str) -> bool:
     except:  # noqa: E722, S110
         pass
 
-    if page.url.startswith("https://rapidapi.com/server-error"):
+    if page.url != link:
         ret = False
 
     return ret

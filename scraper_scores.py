@@ -20,7 +20,7 @@ def navigate(page, link: str) -> bool:
     except:  # noqa: E722, S110
         pass
 
-    if page.url.startswith("https://rapidapi.com/server-error"):
+    if page.url != link:
         ret = False
 
     return ret
@@ -93,7 +93,7 @@ def main() -> None:
                 logger.info(f"index_file_path: {index_file_path}")
 
             with sync_playwright() as pw_ctx_man:
-                browser = pw_ctx_man.chromium.launch(headless=True)
+                browser = pw_ctx_man.chromium.launch(headless=False)
                 context = browser.new_context()
                 page = context.new_page()
 
