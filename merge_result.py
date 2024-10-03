@@ -86,7 +86,7 @@ def merge(src_dpath: str):
 
                 score_fpath = os.path.join(
                     dpath,
-                    fname.replace(".json", "_discuss.json"),
+                    fname.replace(".json", "_score.json"),
                 )
 
                 with open(fpath, mode="r") as f:
