@@ -93,7 +93,7 @@ def main() -> None:
                 logger.info(f"index_file_path: {index_file_path}")
 
             with sync_playwright() as pw_ctx_man:
-                browser = pw_ctx_man.chromium.launch(headless=False)
+                browser = pw_ctx_man.chromium.launch(headless=True)
                 context = browser.new_context()
                 page = context.new_page()
 

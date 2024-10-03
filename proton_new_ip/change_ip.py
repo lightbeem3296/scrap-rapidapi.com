@@ -36,7 +36,7 @@ def find_and_click_image(image_path):
 def main():
     # Repeat every 10 seconds
     with sync_playwright() as pw_ctx_man:
-        browser = pw_ctx_man.chromium.launch(headless=False)
+        browser = pw_ctx_man.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 

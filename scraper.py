@@ -223,7 +223,7 @@ def work(start: int, count: int) -> None:  # noqa: PLR0915
     ctypes.windll.kernel32.SetConsoleTitleW(f"start: {start}, count: {count}")
 
     with sync_playwright() as pw_ctx_man:
-        browser = pw_ctx_man.chromium.launch(headless=False, timeout=60000)
+        browser = pw_ctx_man.chromium.launch(headless=True, timeout=60000)
         context = browser.new_context()
         page = context.new_page()
 
