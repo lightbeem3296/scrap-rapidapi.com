@@ -26,6 +26,8 @@ def find_and_click_image(image_path):
             # Click on the image
             pyautogui.click()
             print(f"Clicked on the image at {image_box}")
+
+            pyautogui.moveTo(x=pos_x, y=pos_y-100, duration=0.5)
         else:
             print("Image not found on the screen")
 
